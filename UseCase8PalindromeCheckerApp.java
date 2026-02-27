@@ -1,98 +1,93 @@
-import java.util.Scanner;
+import java.util.*;
 
-class UseCase8PalindromeCheckerApp {
+interface PalindromeStrategy {
+    boolean checkPalindrome(String input);
+}
 
-    // Node class for Singly Linked List
-    static class Node {
-        char data;
-        Node next;
+class StackStrategy implements PalindromeStrategy {
 
-        Node(char data) {
-            this.data = data;
-            this.next = null;
-        }
-    }
+    public boolean checkPalindrome(String input) {
+        String normalized = input.replaceAll("\\s+", "").toLowerCase();
+        Stack<Character> stack = new Stack<>();
 
-    // Convert string to linked list
-    public static Node createLinkedList(String str) {
-        Node head = null, tail = null;
-
-        for (int i = 0; i < str.length(); i++) {
-            Node newNode = new Node(str.charAt(i));
-
-            if (head == null) {
-                head = newNode;
-                tail = newNode;
-            } else {
-                tail.next = newNode;
-                tail = newNode;
-            }
-        }
-        return head;
-    }
-
-    // Reverse linked list (used for second half)
-    public static Node reverse(Node head) {
-        Node prev = null;
-        Node current = head;
-        Node nextNode = null;
-
-        while (current != null) {
-            nextNode = current.next;
-            current.next = prev;
-            prev = current;
-            current = nextNode;
-        }
-        return prev;
-    }
-
-    // Check palindrome using linked list
-    public static boolean isPalindrome(Node head) {
-        if (head == null || head.next == null)
-            return true;
-
-        Node slow = head;
-        Node fast = head;
-
-        // Find middle using fast & slow pointer
-        while (fast != null && fast.next != null) {
-            slow = slow.next;
-            fast = fast.next.next;
+        for (int i = 0; i < normalized.length(); i++) {
+            stack.push(normalized.charAt(i));
         }
 
-        // Reverse second half
-        Node secondHalf = reverse(slow);
-        Node firstHalf = head;
-
-        // Compare both halves
-        while (secondHalf != null) {
-            if (firstHalf.data != secondHalf.data) {
+        for (int i = 0; i < normalized.length(); i++) {
+            if (normalized.charAt(i) != stack.pop())
                 return false;
-            }
-            firstHalf = firstHalf.next;
-            secondHalf = secondHalf.next;
         }
 
         return true;
     }
+}
 
-    // Main method
+class DequeStrategy implements PalindromeStrategy {
+
+    public boolean checkPalindrome(String input) {
+        String normalized = input.replaceAll("\\s+", "").toLowerCase();
+        Deque<Character> deque = new ArrayDeque<>();
+
+        for (int i = 0; i < normalized.length(); i++) {
+            deque.addLast(normalized.charAt(i));
+        }
+
+        while (deque.size() > 1) {
+            if (!deque.removeFirst().equals(deque.removeLast()))
+                return false;
+        }
+
+        return true;
+    }
+}
+
+class PalindromeContext {
+    private PalindromeStrategy strategy;
+
+    public PalindromeContext(PalindromeStrategy strategy) {
+        this.strategy = strategy;
+    }
+
+    public void setStrategy(PalindromeStrategy strategy) {
+        this.strategy = strategy;
+    }
+
+    public boolean execute(String input) {
+        return strategy.checkPalindrome(input);
+    }
+}
+
+public class UseCase12PalindromeCheckerApp {
+
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
         System.out.print("Enter a string: ");
         String input = scanner.nextLine();
 
-        // Optional: remove spaces & make lowercase
-        input = input.replaceAll("\\s+", "").toLowerCase();
+        System.out.println("Choose Strategy:");
+        System.out.println("1. Stack Strategy");
+        System.out.println("2. Deque Strategy");
+        System.out.print("Enter choice (1 or 2): ");
 
-        Node head = createLinkedList(input);
+        int choice = scanner.nextInt();
 
-        if (isPalindrome(head)) {
+        PalindromeStrategy strategy;
+
+        if (choice == 1)
+            strategy = new StackStrategy();
+        else
+            strategy = new DequeStrategy();
+
+        PalindromeContext context = new PalindromeContext(strategy);
+
+        boolean result = context.execute(input);
+
+        if (result)
             System.out.println("The given string is a Palindrome.");
-        } else {
+        else
             System.out.println("The given string is NOT a Palindrome.");
-        }
 
         scanner.close();
     }
